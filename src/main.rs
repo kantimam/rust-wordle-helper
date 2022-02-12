@@ -2,10 +2,6 @@ use std::fs::File;
 use std::io::{self, stdin, BufRead};
 use std::iter::FromIterator;
 
-fn suggest_word(word: &String) {
-    println!("enter the word: {}", word);
-}
-
 fn apply_response_filter(
     words: Vec<String>,
     suggested_word: &String,
@@ -14,7 +10,7 @@ fn apply_response_filter(
     let mut filtered_words: Vec<String> = words;
     let mut chars_in_word: Vec<char> = Vec::new();
 
-    for n in 0..4 {
+    for n in 0..5 {
         let word_char = suggested_word.chars().nth(n).unwrap();
         let response_char = response_pattern
             .chars()
@@ -50,14 +46,14 @@ fn apply_response_filter(
 
         match response_char {
             2 => {
-                println!("found char {} at pos {}", word_char, n);
+                //println!("found char {} at pos {}", word_char, n);
                 filtered_words = filtered_words
                     .into_iter()
                     .filter(|word| word.chars().nth(n) == Some(word_char))
                     .collect()
             }
             1 => {
-                println!("char {} is inside the word somewhere", word_char);
+                //println!("char {} is inside the word somewhere", word_char);
                 filtered_words = filtered_words
                     .into_iter()
                     .filter(|word| word.contains(word_char))
@@ -65,14 +61,14 @@ fn apply_response_filter(
             }
             0 => {
                 if !chars_in_word.contains(&word_char) {
-                    println!("char {} is not in  the word", word_char);
+                    //println!("char {} is not in  the word", word_char);
 
                     filtered_words = filtered_words
                         .into_iter()
                         .filter(|word| !word.contains(word_char))
                         .collect()
                 } else {
-                    println!("is somewhere else aswell {}", word_char)
+                    //println!("is somewhere else aswell {}", word_char)
                 }
             }
             _ => {}
@@ -83,8 +79,6 @@ fn apply_response_filter(
 }
 
 fn main() {
-    println!("Hello, world!");
-
     let file = File::open("words.txt").unwrap();
     let words = Vec::from_iter(io::BufReader::new(file).lines().map(|word| word.unwrap()));
 
@@ -94,19 +88,19 @@ fn main() {
 
     let mut attempts = 1;
 
-    while attempts < 6 {
-        suggest_word(&suggested_word);
+    println!("after entering the word to wordle copy wordles response to the cli like this: green=2, yellow=1, grey=0 (giving you a pattern like this 10021)");
 
+    while attempts < 6 {
+        println!("enter the word: {}", suggested_word);
+        println!("enter wordles response pattern");
         response_pattern.clear();
 
         stdin()
             .read_line(&mut response_pattern)
             .expect("enter a valid string");
 
-        println!("you entered the pattern {}", response_pattern);
-
-        if response_pattern.len() < 5 {
-            println!("pattern needs to be 5 chars long");
+        if response_pattern.len() < 5 || !response_pattern[..5].chars().all(|c| c.is_numeric()) {
+            println!("pattern needs to be 5 chars long and only contain digits");
             continue;
         }
 
@@ -114,10 +108,10 @@ fn main() {
 
         filtered_words = apply_response_filter(filtered_words, &suggested_word, &response_pattern);
 
-        for n in 0..10 {
+        for n in 0..20 {
             match filtered_words.get(n) {
                 Some(word) => println!("{}: {}", n, word),
-                None => println!("could not find word for index {}", n),
+                None => break,
             }
         }
 
@@ -127,8 +121,6 @@ fn main() {
         stdin()
             .read_line(&mut entered_word)
             .expect("enter a valid string");
-
-        println!("you entered the pattern {}", entered_word);
 
         if entered_word.len() < 5 {
             println!("word needs to be 5 chars long");
